@@ -4,6 +4,7 @@ from langchain.agents import tool
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.tools.render import render_text_description
+from langchain.agents.output_parsers import ReActSingleInputOutputParser
 
 
 @tool
@@ -60,6 +61,7 @@ if __name__ == "__main__":
         }
         | prompt
         | llm
+        | ReActSingleInputOutputParser()
     )
 
     res = agent.invoke({"input": "What is the length of 'DOG' in characters?"})
