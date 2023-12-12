@@ -1,0 +1,66 @@
+import os
+
+from langchain.agents import tool
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.tools.render import render_text_description
+
+
+@tool
+def get_text_length(text: str) -> int:
+    """Returns the length of a text by characters"""
+    print(f"get_text_length enter with {text=}")
+    return len(text)
+
+
+if __name__ == "__main__":
+    print("Hello ReAct LangChain!")
+    tools = [get_text_length]
+
+    template = """
+    Answer the following questions as best you can. You have access to the following tools:
+
+    {tools}
+    
+    Use the following format:
+    
+    Question: the input question you must answer
+    Thought: you should always think about what to do
+    Action: the action to take, should be one of [{tool_names}]
+    Action Input: the input to the action
+    Observation: the result of the action
+    ... (this Thought/Action/Action Input/Observation can repeat N times)
+    Thought: I now know the final answer
+    Final Answer: the final answer to the original input question
+    
+    Begin!
+    
+    Question: {input}
+    Thought:
+    """
+
+    prompt = PromptTemplate.from_template(template=template).partial(
+        tools=render_text_description(tools),
+        tool_names=", ".join([t.name for t in tools]),
+    )
+
+    llm = ChatOpenAI(
+        temperature=0, model_kwargs={'stop':["\nObservation"]}
+    )
+    # Agent variable is defined using a chain of three functions using the | operator.
+    # Anonymous function: { "input": lambda x: x["input"] }
+    # takes a dictionary as input and returns a new dictionary with the same content.
+    # Its purpose is to provide an "input" key for later stages of the chain.
+    # prompt: This refers to the prompt variable with the template with information about available tools.
+    # llm: An instance of the ChatOpenAI class for generating text based on the given prompt.
+    #
+    agent = (
+        {
+            "input": lambda x: x["input"],
+        }
+        | prompt
+        | llm
+    )
+
+    res = agent.invoke({"input": "What is the length of 'DOG' in characters?"})
+    print(res)
