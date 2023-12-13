@@ -89,31 +89,24 @@ if __name__ == "__main__":
         | ReActSingleInputOutputParser()
     )
 
-    # The invoke method of the agent is called with a dictionary containing the input question.
-    # This call returns an object of type AgentAction or AgentFinish.
-    agent_step: Union[AgentAction, AgentFinish] = agent.invoke(
-        {
-            "input": "What is the length of characters of the following text: DOG?",
-            "agent_scratchpad": intermediate_steps,
-        }
-    )
-    print(agent_step)
+    agent_step = ""
+    while not isinstance(agent_step, AgentFinish):
+        agent_step: Union[AgentAction, AgentFinish] = agent.invoke(
+            {
+                "input": "Write a haiku about dogs and then count the length by characters?",
+                "agent_scratchpad": intermediate_steps,
+            }
+        )
+        print(agent_step)
 
-    # Checks if the agent_step is an AgentAction object. If it is, steps are performed.
-    if isinstance(agent_step, AgentAction):
-        tool_name = agent_step.tool # Get tool name
-        tool_to_use = find_tool_by_name(tools, tool_name) # Find tool by name
-        tool_input = agent_step.tool_input # Get tool input
-        observation = tool_to_use.func(str(tool_input)) # Run tool and get observation
-        print(f"{observation=}")
-        intermediate_steps.append((agent_step, str(observation))) # Add observation to intermediate steps
+        if isinstance(agent_step, AgentAction):
+            tool_name = agent_step.tool
+            tool_to_use = find_tool_by_name(tools, tool_name)
+            tool_input = agent_step.tool_input
 
-    agent_step: Union[AgentAction, AgentFinish] = agent.invoke(
-        {
-            "input": "What is the length of characters of the following text: DOG?",
-            "agent_scratchpad": intermediate_steps,
-        }
-    )
+            observation = tool_to_use.func(str(tool_input))
+            print(f"{observation=}")
+            intermediate_steps.append((agent_step, str(observation)))
 
     if isinstance(agent_step, AgentFinish):
         print(agent_step.return_values)
