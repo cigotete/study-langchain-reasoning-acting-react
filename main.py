@@ -20,6 +20,13 @@ def get_text_length(text: str) -> int:
     return len(text)
 
 
+@tool
+def write_haiku(topic:str)->str:
+    """Writes a haiku about a given topic."""
+    print(f"write_haiku enter with {topic=}")
+    return ChatOpenAI().predict(text=f"Write a haiku about {topic}")
+
+
 def find_tool_by_name(tools: List[Tool], tool_name: str) -> Tool:
     for tool in tools:
         if tool.name == tool_name:
